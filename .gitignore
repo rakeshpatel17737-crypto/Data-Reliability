@@ -1,0 +1,6 @@
+venv/
+__pycache__/
+*.pyc
+*.db
+sample_data/*_backup_*.csv
+.env

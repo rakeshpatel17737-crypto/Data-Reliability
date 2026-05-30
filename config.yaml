@@ -1,0 +1,51 @@
+# ============================================================
+#  DATA RELIABILITY SYSTEM — CONFIGURATION FILE
+#  Edit this file to tell the tool what to watch.
+#  No coding needed — just fill in the values below.
+# ============================================================
+
+# --- AI SETTINGS --------------------------------------------
+# Paste your Anthropic API key here to enable AI-powered diagnosis.
+# Get one at: https://console.anthropic.com/settings/keys
+# If left blank, the tool falls back to rule-based diagnosis.
+anthropic_api_key: ""
+gemini_api_key: ""        # Get free key at aistudio.google.com
+groq_api_key: ""          # Get free key at console.groq.com
+
+# --- SLACK SETTINGS -----------------------------------------
+# Paste your Slack Webhook URL here.
+# How to get one: https://api.slack.com/messaging/webhooks
+slack_webhook_url: ""     # Paste your Slack Webhook URL here
+
+# --- SCHEDULE -----------------------------------------------
+# How often should the tool check your data? (in minutes)
+check_interval_minutes: 30
+
+# --- DATA SOURCES -------------------------------------------
+# List every file or folder you want the tool to watch.
+# You can add as many as you like by copying the block below.
+
+data_sources:
+  - name: "Sales Data"           # A friendly name shown in Slack alerts
+    type: csv                    # Leave as "csv" for spreadsheet files
+    path: "sample_data/sales.csv"  # Path to your file
+    auto_fix: true               # true = fix safe issues automatically
+    rules:
+      max_null_percent: 5        # Alert if more than 5% of values are missing
+      min_row_count: 5           # Alert if fewer than this many rows exist
+      required_columns:          # Alert if any of these columns go missing
+        - date
+        - revenue
+        - customer_id
+
+  - name: "Customer List"
+    type: csv
+    path: "sample_data/customers.csv"
+    auto_fix: false
+    rules:
+      max_null_percent: 10
+      min_row_count: 3
+      required_columns:
+        - customer_id
+        - name
+        - email
