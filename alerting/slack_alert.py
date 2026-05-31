@@ -76,6 +76,40 @@ def send_issues(webhook_url: str, source_name: str, issues: list[dict], fix_log:
     _post(webhook_url, message)
 
 
+def send_prediction(webhook_url: str, prediction: dict):
+    """Send a pre-failure prediction alert to Slack."""
+    summary = prediction["summary"]
+    score = prediction["health_score"]
+    risk = prediction["risk_level"]
+    name = prediction["source_name"]
+
+    if not _is_real_webhook(webhook_url):
+        print(f"\n[Slack Prediction Alert — {name}]")
+        print(f"  Health Score: {score}/100  |  Risk: {risk.upper()}")
+        for w in prediction.get("warnings", []):
+            print(f"  ⚠️  {w['description']}")
+        print()
+        return
+
+    emoji = "🔴" if risk == "critical" else "🟡"
+    blocks = [
+        {
+            "type": "header",
+            "text": {"type": "plain_text", "text": f"{emoji} Pre-Failure Warning: {name}"}
+        },
+        {
+            "type": "context",
+            "elements": [{"type": "mrkdwn", "text": f"Health Score: *{score}/100* • Risk: *{risk.upper()}* • {_now()}"}]
+        },
+        {"type": "divider"},
+        {
+            "type": "section",
+            "text": {"type": "mrkdwn", "text": summary}
+        },
+    ]
+    _post(webhook_url, {"blocks": blocks, "text": f"{emoji} Pre-failure warning for {name} (score: {score}/100)"})
+
+
 def send_error(webhook_url: str, source_name: str, error: str):
     """Send an error alert to Slack when the tool itself fails."""
     msg = f"🔴 *Error checking '{source_name}'*\n```{error}```\n_Check that the file path in config.yaml is correct._"

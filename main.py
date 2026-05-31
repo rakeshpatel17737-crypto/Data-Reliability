@@ -20,7 +20,8 @@ from storage.history import save_snapshot, get_last_snapshot
 from engine.detector import run_checks
 from engine.diagnoser import diagnose
 from engine.remediator import auto_fix
-from alerting.slack_alert import send_all_clear, send_issues, send_error
+from engine.predictor import predict
+from alerting.slack_alert import send_all_clear, send_issues, send_error, send_prediction
 
 try:
     from engine.ai_diagnoser import diagnose_with_ai
@@ -67,6 +68,15 @@ def check_source(source: dict, slack_webhook: str, config: dict = None):
             send_all_clear(slack_webhook, name, len(df))
 
         save_snapshot(name, df, file_mod_time)
+
+        # --- PREDICTIVE CHECK (runs after every snapshot is saved) ---
+        prediction = predict(name)
+        score = prediction["health_score"]
+        risk = prediction["risk_level"]
+        print(f"    🔮 Health score: {score}/100  |  Risk: {risk.upper()}")
+        if prediction["should_alert"]:
+            print(f"    ⚠️  Pre-failure warning sent to Slack for {name}")
+            send_prediction(slack_webhook, prediction)
 
     except Exception as e:
         print(f"  ❌ Error checking '{name}': {e}")
